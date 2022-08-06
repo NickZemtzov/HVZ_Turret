@@ -1,13 +1,24 @@
 # arduinoIntegration.py
 import serial
 import time
-arduino = serial.Serial(port='/dev/cu.usbserial-14330', baudrate=115200, timeout=.1)
-def write_read(x):
-    arduino.write(bytes(x, 'utf-8'))
-    time.sleep(0.05)
-    data = arduino.readline()
+import binascii
+
+arduino = serial.Serial(port='/dev/cu.usbserial-14230', baudrate=115200, timeout=.1) # You must wait around 2 seconds after initializing before sending data or the handshake won't complete
+def write_read(sent, expected):
+    arduino.write(sent)
+    data = bytes("", 'utf-8')
+    while data != expected:
+        data = arduino.readline()
     return data
+
 while True:
-    num = input("Enter a number: ") # Taking input from user
-    value = write_read(num)
+    num = input("Enter ascii: ") # Taking input from user
+    value = write_read(bytes(num,'utf-8'),bytes(str(ord(num)),'utf-8'))
     print(value) # printing the value
+
+
+
+
+#TODO power the servos directly from the 5V not through the arduino becuase the current draw makes them worse
+
+#NOTE for testing, plug in the 12V cuz it changes how much power the servos get which changes their operating parameters

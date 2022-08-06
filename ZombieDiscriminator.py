@@ -1,7 +1,19 @@
 import cv2
 import numpy as np
+import serial
+import time
 
-# Do bitwise input over SPI
+arduino=serial.Serial(port='/dev/cu.usbserial-14230', baudrate=115200, timeout=0.1)
+def SendCommand(sent, expected):
+    print(f"Sending {sent}, expected {expected}.")
+    arduino.write(sent)
+    data = bytes("", 'utf-8')
+    while data != expected:
+        data = arduino.readline()
+
+#def DetermineCommand():
+    
+
 
 #Camera setup
 cap = cv2.VideoCapture(0)
@@ -26,35 +38,37 @@ UpperMaskThreashold = 100
 torso_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_upperbody.xml')
 
 while(True):
+    # Camera setup
     ret, image = cap.read()
     image = cv2.resize(image,(0,0), fx=scalingFactor, fy=scalingFactor)
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    frameCenter = (int(image.shape[1]/2), int(image.shape[0]/2))            # You should hard code this as a variable for the specific camera
+    frame_center = (int(image.shape[1]/2), int(image.shape[0]/2))            # You should hard code this as a variable for the specific camera
     upper_body = torso_cascade.detectMultiScale(gray, 1.1, 8)
 
-    # Location of the target.
-    # Lateral options: left, right, no move. 2 bits
-    # Vertical options: left, right, no move. 2 bits
-    vertical
-
+    # Find the zombies
     Zombies = []
     for (x, y, w, h) in upper_body:
         cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
         cropped_image = image[y:y+h, x:x+w]
         hsv = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, (80,150,0), (170,255,255)) # Takes HSV color
-        #cv2.imshow('mask red color', mask)
+        #cv2.imshow('mask color', mask)
         if int(np.sum(mask == 255)/(w*h)*1000) > LowerMaskThreashold and int(np.sum(mask == 255)/(w*h)*1000) < UpperMaskThreashold:
             cv2.putText(image, 'Zombie', (x,y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,200,0), 3, cv2.LINE_AA)
             Zombies.append([x,y,w,h])
 
+    # Find the closest zombie by how large it's rectangle is and paint a target
     if len(Zombies) > 0:
-        target = sorted(Zombies, key=lambda x:x[2]*x[3], reverse=True)[0] # Finds the closest Zombie
+        target = sorted(Zombies, key=lambda x:x[2]*x[3], reverse=True)[0] # Finds the closest ZombieA
+        target_center = (int(target[0]+(target[2]/2)), int(target[1]+(target[3]/2)))
+        cv2.line(image, target_center, frame_center, (0, 0, 255), 3)
 
-        # Determine which way the servo should move
+        # Determine what commands to send to the Arduino based on zombie location and persistence
+        horizontal_delta = target_center[0] - frame_center[0]
+        vertical_delta = target_center[1]-frame_center[1]
 
-
-
+        #DetermineCommand(horizontal_delta, vertical_delta)
+        SendCommand(bytes("0",'utf-8'),bytes(str(ord("0")),'utf-8'))
 
 
     cv2.imshow('Frame',image)
