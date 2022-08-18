@@ -3,16 +3,53 @@ import numpy as np
 import serial
 import time
 
+# Arduino Communication
 arduino=serial.Serial(port='/dev/cu.usbserial-14230', baudrate=115200, timeout=0.1)
+HorizontalPosition = 0
+VerticalPosition = 60
+VerticalConfines = (30,85)
+
 def SendCommand(sent, expected):
+    sent = bytes(sent,'utf-8')
+    expected = bytes(str(ord(expected)),'utf-8')
     print(f"Sending {sent}, expected {expected}.")
     arduino.write(sent)
     data = bytes("", 'utf-8')
+    now = time.time()
     while data != expected:
+        #try:
         data = arduino.readline()
+        if time.time() > now+5:
+            return 60
+        #except:
+        #    arduino=serial.Serial(port='/dev/cu.usbserial-14230', baudrate=115200, timeout=0.1)
+            #time.sleep(2)
+    print(data.decode('utf-8'))
+    return int(data.decode('utf-8'))
 
-#def DetermineCommand():
+def CreateCommand(horizontal_delta, vertical_delta):
+    global VerticalPosition
+    global HorizontalPosition
+    global VerticalConfines
+    # Vertical Movement
+    vertical_weight = 2
+    print(vertical_delta)
+    if vertical_delta > 10: # if person is far enoughbelow where aiming move down
+        new_position = int(VerticalPosition - vertical_delta/vertical_weight)
+        if new_position < VerticalConfines[0]:
+            new_position = VerticalConfines[0]
+        VerticalPosition = SendCommand(f"4{chr(new_position)}", chr(new_position))
+    elif vertical_delta < -10: # or likewise move up
+        new_position = int(VerticalPosition - vertical_delta/vertical_weight)
+        if new_position > VerticalConfines[1]:
+            new_position = VerticalConfines[1]
+        VerticalPosition = SendCommand(f"4{chr(new_position)}", chr(new_position))
     
+
+    elif vertical_delta < 10 and vertical_delta > -10 and horizontal_delta < 10 and horizontal_delta > -10:
+        SendCommand("3", "3")
+    
+
 
 
 #Camera setup
@@ -64,11 +101,10 @@ while(True):
         cv2.line(image, target_center, frame_center, (0, 0, 255), 3)
 
         # Determine what commands to send to the Arduino based on zombie location and persistence
-        horizontal_delta = target_center[0] - frame_center[0]
-        vertical_delta = target_center[1]-frame_center[1]
+        horizontal_delta = frame_center[0] - target_center[0]
+        vertical_delta = frame_center[1] - target_center[1]
 
-        #DetermineCommand(horizontal_delta, vertical_delta)
-        SendCommand(bytes("0",'utf-8'),bytes(str(ord("0")),'utf-8'))
+        CreateCommand(horizontal_delta, vertical_delta)
 
 
     cv2.imshow('Frame',image)
