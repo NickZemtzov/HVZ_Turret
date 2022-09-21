@@ -1,0 +1,76 @@
+<html>
+  <head>
+    <title>Sentry Turret</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script>
+    $(document).ready(function() {
+      $('.btn').click(function() {
+        $.ajax({
+          url: '',
+          type: 'get',
+          contentType: 'application/json',
+          data: {
+            button_text: $(this).text()
+          }
+        })
+      })
+    })
+    </script>
+    <script>
+      $(document).keydown(function(e){
+        if (e.which == 83){
+          $("#up").click();
+        }
+        if (e.which == 87){
+          $("#down").click();
+        }
+        if (e.which == 65){
+          $("#left").click();
+        }
+        if (e.which == 68){
+          $("#right").click();
+        }
+        if (e.which == 32){
+          $("#speed").click();
+        }
+        if (e.which == 77){
+          $("#automatic").click();
+        }
+        if (e.which == 78){
+          $("#manual").click();
+        }
+      });
+    </script>
+    <script>
+      $(document).keyup(function(e){
+        if (e.which == 83){
+          $("#stopup").click();
+        }
+        if (e.which == 87){
+          $("#stopdown").click();
+        }
+        if (e.which == 65){
+          $("#stopleft").click();
+        }
+        if (e.which == 68){
+          $("#stopright").click();
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Sentry Turret</h1>
+    <img src="{{ url_for('video_feed') }}">
+    <button class="btn" id=up>Up</button>
+    <button class="btn" id=down>Down</button>
+    <button class="btn" id=left>Left</button>
+    <button class="btn" id=right>Right</button>
+    <button class="btn" id=speed>Speed</button>
+    <button class="btn" id=stopup>StopUp</button>
+    <button class="btn" id=stopdown>StopDown</button>
+    <button class="btn" id=stopleft>StopLeft</button>
+    <button class="btn" id=stopright>StopRight</button>
+    <button class="btn" id=automatic>Automatic</button>
+    <button class="btn" id=manual>Manual</button>
+  </body>
+</html>
