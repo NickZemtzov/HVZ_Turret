@@ -134,13 +134,4 @@ void loop() {
   } else {
     Serial.print("R");
   }
-
-  //unsigned long progress = millis() - moveStartTime;
-  //if (progress <= MOVING_TIME) {
-  //  ReloadingServo.write(1);
-  //} else {
-  //  ReloadingServo.write(0);
-  //}
-  
-
 }
